@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<script type="text/javascript" src="../libs/three.js"></script>
+    <script type="text/javascript" src="../libs/stats.js"></script>
+    <script type="text/javascript" src="../libs/dat.gui.js"></script>
+	<title>threejs demos</title>
+	<style>
+	    body {
+	    	margin: 0;
+	    	padding: 0;
+	    	overflow: hidden;
+	    }
+	</style>
+</head>
+<body>
+    <div id="statsContainer"></div>
+    <div id="webglContainer"></div>
+
+    <script type="text/javascript">
+    	function init() {
+    		// 新建 场景 
+    		var scene = new THREE.Scene();
+    		
+    		// 新建坐标系 添加到场景中
+    		var axes = new THREE.AxisHelper(10);
+    		scene.add(axes);
+    
+    		// 新建平面几何体 新建材质 匹配几何体&几何体材质 设置几何体的角度&位置 添加平面到场景中
+    		var planeGeometry = new THREE.PlaneGeometry(55, 35);
+    		var planeMaterial = new THREE.MeshLambertMaterial({color: 0xcccccc});
+    		var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+            plane.receiveShadow = true;
+
+    		plane.rotation.x = -0.5 * Math.PI;
+    		plane.position.x = 20;
+    		plane.position.y = 0;
+    		plane.position.z = 0;
+
+    		scene.add(plane);
+    		
+    		// 新建立方体几何体 新建材质 匹配几何体&几何体材质 设置几何体位置 添加到场景中
+    		var cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
+    		var cubeMaterial = new THREE.MeshLambertMaterial({color: 0xffff00});
+    		var cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+            cube.castShadow = true;
+
+    		cube.position.x = -4;
+    		cube.position.y = 3;
+    		cube.position.z = 0;
+
+    		scene.add(cube);
+    		
+    		// 新建球形几何体 新建材质 匹配几何体&几何体材质 设置几何体位置 添加到场景中
+    		var sphereGeometry = new THREE.SphereGeometry(4, 30, 30);
+    		var sphereMaterial = new THREE.MeshLambertMaterial({color: 0xff00ff});
+    		var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+            sphere.castShadow = true;
+
+    		sphere.position.x = 30;
+    		sphere.position.y = 4;
+    		sphere.position.z = 2;
+
+    		scene.add(sphere);
+
+            var spotLight = new THREE.SpotLight(0xffffff);
+            spotLight.position.set(-40, 60, -10);
+            spotLight.castShadow = true;
+
+            scene.add(spotLight);
+
+            var ambientLight = new THREE.AmbientLight(0x0c0c0c);
+            scene.add(ambientLight);
+
+    		// 新建 透视相机 设置相机位置 & 拍摄角度
+    		var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000); 
+    		camera.position.x = -30;
+    		camera.position.y = 30;
+    		camera.position.z = 30;
+    		camera.lookAt(scene.position);
+
+    		// 新建渲染器 渲染器颜色 & 尺寸 设置
+    		var render = new THREE.WebGLRenderer();
+    		render.setClearColor(new THREE.Color(0xEEEEEE, 1.0));
+    		render.setSize(window.innerWidth, window.innerHeight);
+            render.shadowMapEnabled = true;
+
+            // 将渲染器的domElement绑定到真实的dom元素中
+            document.getElementById("webglContainer").appendChild(render.domElement);
+
+            var step = 0;
+            var stats = initStats();
+
+            var controls = new function() {
+                this.rotationSpeed = 0.02;
+                this.bouncingSpeed = 0.03;
+            };
+
+            var gui = new dat.GUI();
+            gui.add(controls, 'rotationSpeed', 0, 0.5);
+            gui.add(controls, 'bouncingSpeed', 0, 0.5);
+
+            renderScene(); // 渲染
+            
+            function renderScene() {
+                stats.update();
+
+                cube.rotation.x += controls.rotationSpeed;
+                cube.rotation.y += controls.rotationSpeed;
+                cube.rotation.z += controls.rotationSpeed;
+
+                step += controls.bouncingSpeed;
+                sphere.position.x = 20 + ( 10 * (Math.cos(step)));
+                sphere.position.y = 2 + ( 10 * Math.abs(Math.sin(step)));
+
+                requestAnimationFrame(renderScene);
+                render.render(scene, camera);
+            }
+
+            function initStats() {
+                var stats = new Stats();
+                stats.setMode(0);
+
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.left = '0px';
+                stats.domElement.style.top = '0px';
+
+                document.getElementById('statsContainer').appendChild(stats.domElement);
+
+                return stats;
+            }
+            
+    		render.render(scene, camera);
+    	}
+
+        function onResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            render.setSize(window.innerWidth, window.innerHeight);
+        }
+    	window.onload = init;
+        window.addEventListener('resize', onResize, false);
+    </script>
+</body>
+</html>

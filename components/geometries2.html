@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<script type="text/javascript" src="../libs/three.js"></script>
+    <script type="text/javascript" src="../libs/stats.js"></script>
+    <script type="text/javascript" src="../libs/dat.gui.js"></script>
+	<title>threejs demos</title>
+	<style>
+	    body {
+	    	margin: 0;
+	    	padding: 0;
+	    	overflow: hidden;
+	    }
+	</style>
+</head>
+<body>
+    <div id="statsContainer"></div>
+    <div id="webglContainer"></div>
+
+    <script type="text/javascript">
+        var camera;
+        var render;
+        var scene;
+
+    	function init() {
+    		// 新建 场景 
+    		scene = new THREE.Scene();
+            // scene.overrideMaterial = new THREE.MeshLambertMaterial({color: 0x00ffff});
+            // scene.fog=new THREE.FogExp2( 0xffffff, 0.015 );
+            // scene.fog = new THREE.Fog(0xffffff, 0.02, 150);
+    		
+    		// 新建坐标系 添加到场景中
+    		var axes = new THREE.AxisHelper(10);
+    		scene.add(axes);
+    
+    		// 新建平面几何体 新建材质 匹配几何体&几何体材质 设置几何体的角度&位置 添加平面到场景中
+    		var planeGeometry = new THREE.PlaneGeometry(60, 40, 1, 1);
+    		var planeMaterial = new THREE.MeshLambertMaterial({color: 0xcccccc});
+    		var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+            plane.receiveShadow = true;
+
+    		plane.rotation.x = -0.5 * Math.PI;
+    		plane.position.x = 0;
+    		plane.position.y = 0;
+    		plane.position.z = 0;
+
+    		scene.add(plane);
+    		
+    		// 新建立方体几何体 新建材质 匹配几何体&几何体材质 设置几何体位置 添加到场景中
+    		var cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
+    		var cubeMaterial = new THREE.MeshLambertMaterial({color: 0xffff00});
+    		var cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+            cube.castShadow = true;
+
+    		cube.position.x = -10;
+    		cube.position.y = 3;
+    		cube.position.z = 0;
+
+    		scene.add(cube);
+    		
+    		// 新建球形几何体 新建材质 匹配几何体&几何体材质 设置几何体位置 添加到场景中
+    		var sphereGeometry = new THREE.SphereGeometry(4, 30, 30);
+    		var sphereMaterial = new THREE.MeshLambertMaterial({color: 0xff00ff});
+    		var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+            sphere.castShadow = true;
+
+    		sphere.position.x = 20;
+    		sphere.position.y = 4;
+    		sphere.position.z = 2;
+
+    		scene.add(sphere);
+
+            var spotLight = new THREE.SpotLight(0xffffff);
+            spotLight.position.set(-40, 60, -10);
+            spotLight.castShadow = true;
+
+            scene.add(spotLight);
+
+            var ambientLight = new THREE.AmbientLight(0x0c0c0c);
+            scene.add(ambientLight);
+
+            addGeometries(scene);
+
+    		// 新建 透视相机 设置相机位置 & 拍摄角度
+    		camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000); 
+    		camera.position.x = -30;
+    		camera.position.y = 30;
+    		camera.position.z = 30;
+    		camera.lookAt(scene.position);
+
+    		// 新建渲染器 渲染器颜色 & 尺寸 设置
+    		render = new THREE.WebGLRenderer();
+    		render.setClearColor(new THREE.Color(0xEEEEEE, 1.0));
+    		render.setSize(window.innerWidth, window.innerHeight);
+            render.shadowMapEnabled = true;
+
+            // 将渲染器的domElement绑定到真实的dom元素中
+            document.getElementById("webglContainer").appendChild(render.domElement);
+
+            var step = 0;
+            var stats = initStats();
+
+            var controls = new function() {
+                this.rotationSpeed = 0.02;
+                this.numberOfObjects = scene.children.length;
+
+                this.removeCube = function () {
+                    var allChildren = scene.children;
+                    var lastChildren = allChildren[allChildren.length - 1];
+
+                    if( lastChildren instanceof THREE.Mesh) {
+                        scene.remove(lastChildren);
+                        this.numberOfObjects = scene.children.length;
+                    }
+                };
+
+                this.addCube = function() {
+                    var cubeSize = Math.ceil(Math.random() * 2);
+                    var cubeGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+                    var cubeMaterial = new THREE.MeshLambertMaterial({color: Math.random() * 0xffffff});
+                    var cubeMesh = new THREE.Mesh(cubeGeometry, cubeMaterial);
+                    cubeMesh.castShadow = true;
+                    cubeMesh.name = "cube-" + scene.children.length;
+
+                    cubeMesh.position.x = -30 + Math.round(Math.random() * planeGeometry.parameters.width);
+                    cubeMesh.position.y = Math.round(Math.random() * 4);
+                    cubeMesh.position.z = -20 + Math.round(Math.random() * planeGeometry.parameters.height);
+
+                    scene.add(cubeMesh);
+                    this.numberOfObjects = scene.children.length;
+                }
+
+                this.outputObjects = function() {
+                    console.log(scene.children);
+                };
+            };
+
+            var gui = new dat.GUI();
+            gui.add(controls, 'rotationSpeed', 0, 0.5);
+            gui.add(controls, 'addCube');
+            gui.add(controls, 'removeCube');
+            gui.add(controls, 'outputObjects');
+            gui.add(controls, 'numberOfObjects').listen();
+
+            renderScene(); // 渲染
+
+            function addGeometries(scene) {
+                var vertices = [
+                    new THREE.Vector3(1, 3, 1),
+                    new THREE.Vector3(1, 3, -1),
+                    new THREE.Vector3(1, -1, 1),
+                    new THREE.Vector3(1, -1, -1),
+                    new THREE.Vector3(-1, 3, -1),
+                    new THREE.Vector3(-1, 3, 1),
+                    new THREE.Vector3(-1, -1, -1),
+                    new THREE.Vector3(-1, -1, 1)
+                ];
+        
+                var faces = [
+                    new THREE.Face3(0, 2, 1),
+                    new THREE.Face3(2, 3, 1),
+                    new THREE.Face3(4, 6, 5),
+                    new THREE.Face3(6, 7, 5),
+                    new THREE.Face3(4, 5, 1),
+                    new THREE.Face3(5, 0, 1),
+                    new THREE.Face3(7, 6, 2),
+                    new THREE.Face3(6, 3, 2),
+                    new THREE.Face3(5, 7, 0),
+                    new THREE.Face3(7, 2, 0),
+                    new THREE.Face3(1, 3, 4),
+                    new THREE.Face3(3, 6, 4),
+                ];
+        
+                var geom = new THREE.Geometry();
+                geom.vertices = vertices;
+                geom.faces = faces;
+                geom.computeFaceNormals();
+        
+                var materials = [
+                    new THREE.MeshLambertMaterial({opacity: 0.5, color: 0xff0000, transparent:         true}),
+                    new THREE.MeshBasicMaterial({color: 0x000000, wireframe: true})
+                ];
+        
+        
+                var mesh = THREE.SceneUtils.createMultiMaterialObject(geom, materials);
+                mesh.children.forEach(function (e) {
+                    e.castShadow = true
+                });
+                scene.add(mesh);
+            }
+
+            function renderScene() {
+                stats.update();
+
+                scene.traverse(function(e) {
+                    if(e instanceof THREE.Mesh && e != plane) {
+                        e.rotation.x += controls.rotationSpeed;
+                        e.rotation.y += controls.rotationSpeed;
+                        e.rotation.z += controls.rotationSpeed;
+                    }
+                });
+
+                requestAnimationFrame(renderScene);
+                render.render(scene, camera);
+            }
+
+            function initStats() {
+                var stats = new Stats();
+                stats.setMode(0);
+
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.left = '0px';
+                stats.domElement.style.top = '0px';
+
+                document.getElementById('statsContainer').appendChild(stats.domElement);
+
+                return stats;
+            }
+
+            
+    		render.render(scene, camera);
+    	}
+
+        function onResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            render.setSize(window.innerWidth, window.innerHeight);
+        }
+    	window.onload = init;
+        window.addEventListener('resize', onResize, false);
+    </script>
+</body>
+</html>

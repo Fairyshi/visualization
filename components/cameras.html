@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<script type="text/javascript" src="../libs/three.js"></script>
+    <script type="text/javascript" src="../libs/stats.js"></script>
+    <script type="text/javascript" src="../libs/dat.gui.js"></script>
+	<title>threejs demos</title>
+	<style>
+	    body {
+	    	margin: 0;
+	    	padding: 0;
+	    	overflow: hidden;
+	    }
+	</style>
+</head>
+<body>
+    <div id="statsContainer"></div>
+    <div id="webglContainer"></div>
+
+    <script type="text/javascript">
+        var camera;
+        var render;
+        var scene;
+        var cube;
+
+    	function init() {
+    		// 新建 场景 
+    		scene = new THREE.Scene();
+            // scene.overrideMaterial = new THREE.MeshLambertMaterial({color: 0x00ffff});
+            // scene.fog=new THREE.FogExp2( 0xffffff, 0.015 );
+            // scene.fog = new THREE.Fog(0xffffff, 0.02, 150);
+    		
+    		// 新建坐标系 添加到场景中
+    		var axes = new THREE.AxisHelper(10);
+    		scene.add(axes);
+    
+    		// 新建平面几何体 新建材质 匹配几何体&几何体材质 设置几何体的角度&位置 添加平面到场景中
+    		var planeGeometry = new THREE.PlaneGeometry(60, 40, 1, 1);
+    		var planeMaterial = new THREE.MeshLambertMaterial({color: 0xcccccc});
+    		var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+            plane.receiveShadow = true;
+
+    		plane.rotation.x = -0.5 * Math.PI;
+    		plane.position.x = 0;
+    		plane.position.y = 0;
+    		plane.position.z = 0;
+
+    		scene.add(plane);
+    		
+    		// 新建立方体几何体 新建材质 匹配几何体&几何体材质 设置几何体位置 添加到场景中
+    		var cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
+    		var cubeMaterial = new THREE.MeshLambertMaterial({color: 0xffff00});
+    		cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+            cube.castShadow = true;
+
+    		cube.position.x = -4;
+    		cube.position.y = 3;
+    		cube.position.z = 0;
+
+    		scene.add(cube);
+    		
+    		// 新建球形几何体 新建材质 匹配几何体&几何体材质 设置几何体位置 添加到场景中
+    		var lookAtGeom = new THREE.SphereGeometry(3);
+    		var sphereMaterial = new THREE.MeshLambertMaterial({color: 0xff00ff});
+    		var lookAtMesh = new THREE.Mesh(lookAtGeom, sphereMaterial);
+
+    		scene.add(lookAtMesh);
+
+            var spotLight = new THREE.SpotLight(0xffffff);
+            spotLight.position.set(-40, 60, -10);
+            spotLight.castShadow = true;
+
+            scene.add(spotLight);
+
+            var ambientLight = new THREE.AmbientLight(0xcc0c0c);
+            scene.add(ambientLight);
+
+    		// 新建 透视相机 设置相机位置 & 拍摄角度
+    		camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000); 
+    		camera.position.x = 120;
+    		camera.position.y = 60;
+    		camera.position.z = 180;
+    		camera.lookAt(scene.position);
+
+    		// 新建渲染器 渲染器颜色 & 尺寸 设置
+    		render = new THREE.WebGLRenderer();
+    		render.setClearColor(new THREE.Color(0xEEEEEE, 1.0));
+    		render.setSize(window.innerWidth, window.innerHeight);
+            render.shadowMapEnabled = true;
+
+            // 将渲染器的domElement绑定到真实的dom元素中
+            document.getElementById("webglContainer").appendChild(render.domElement);
+
+            var step = 0;
+            var stats = initStats();
+
+            var controls = new function() {
+                this.perspective = "Perspective";
+                this.switchCamera = function () {
+                    if (camera instanceof THREE.PerspectiveCamera) {
+                        camera = new THREE.OrthographicCamera(window.innerWidth / -16, window.innerWidth     / 16, window.innerHeight / 16, window.innerHeight / -16, -200, 500);
+                        camera.position.x = 120;
+                        camera.position.y = 60;
+                        camera.position.z = 180;
+                        camera.lookAt(scene.position);
+                        this.perspective = "Orthographic";
+                    } else {
+                        camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight,     0.1, 1000);
+                        camera.position.x = 120;
+                        camera.position.y = 60;
+                        camera.position.z = 180;
+    
+                        camera.lookAt(scene.position);
+                        this.perspective = "Perspective";
+                    }
+                };
+            };
+
+            var gui = new dat.GUI();
+            gui.add(controls, 'switchCamera');
+            gui.add(controls, 'perspective').listen();
+    
+            renderScene(); // 渲染
+            
+            function renderScene() {
+                stats.update();
+
+                step += 0.02;
+                if (camera instanceof THREE.Camera) {
+                    var x = 10 + ( 100 * (Math.sin(step)));
+                    camera.lookAt(new THREE.Vector3(x, 10, 0));
+                    lookAtMesh.position.copy(new THREE.Vector3(x, 10, 0));
+                }
+
+                requestAnimationFrame(renderScene);
+                render.render(scene, camera);
+            }
+
+            function initStats() {
+                var stats = new Stats();
+                stats.setMode(0);
+
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.left = '0px';
+                stats.domElement.style.top = '0px';
+
+                document.getElementById('statsContainer').appendChild(stats.domElement);
+
+                return stats;
+            }
+            
+    		render.render(scene, camera);
+    	}
+
+        function onResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            render.setSize(window.innerWidth, window.innerHeight);
+        }
+    	window.onload = init;
+        window.addEventListener('resize', onResize, false);
+    </script>
+</body>
+</html>

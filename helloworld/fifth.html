@@ -19,6 +19,9 @@
     <div id="webglContainer"></div>
 
     <script type="text/javascript">
+        var camera;
+        var render;
+
     	function init() {
     		// 新建 场景 
     		var scene = new THREE.Scene();
@@ -74,14 +77,14 @@
             scene.add(ambientLight);
 
     		// 新建 透视相机 设置相机位置 & 拍摄角度
-    		var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000); 
+    		camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000); 
     		camera.position.x = -30;
     		camera.position.y = 30;
     		camera.position.z = 30;
     		camera.lookAt(scene.position);
 
     		// 新建渲染器 渲染器颜色 & 尺寸 设置
-    		var render = new THREE.WebGLRenderer();
+    		render = new THREE.WebGLRenderer();
     		render.setClearColor(new THREE.Color(0xEEEEEE, 1.0));
     		render.setSize(window.innerWidth, window.innerHeight);
             render.shadowMapEnabled = true;

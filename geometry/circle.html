@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>threejs demos</title>
+	<script type="text/javascript" src="../libs/three.js"></script>
+    <script type="text/javascript" src="../libs/stats.js"></script>
+    <script type="text/javascript" src="../libs/dat.gui.js"></script>
+	<style>
+	    body {
+	    	margin: 0;
+	    	padding: 0;
+	    	height: 1vh;
+	    }
+	</style>
+</head>
+<body>
+
+<div id="statsContainer">
+</div>
+<div id="webglContainer">
+</div>
+
+<script type="text/javascript">
+    function init() {
+
+        var stats = initStats();
+
+        var scene = new THREE.Scene();
+
+        var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        var webGLRenderer = new THREE.WebGLRenderer();
+        webGLRenderer.setClearColor(new THREE.Color(0xEEEEEE, 1.0));
+        webGLRenderer.setSize(window.innerWidth, window.innerHeight);
+        webGLRenderer.shadowMapEnabled = true;
+
+        var circle = createMesh(new THREE.CircleGeometry(4, 10, 0.3 * Math.PI * 2, 0.3 * Math.PI * 2));
+        scene.add(circle);
+
+        camera.position.x = -20;
+        camera.position.y = 30;
+        camera.position.z = 40;
+        camera.lookAt(new THREE.Vector3(10, 0, 0));
+
+        var spotLight = new THREE.SpotLight(0xffffff);
+        spotLight.position.set(-40, 60, -10);
+        scene.add(spotLight);
+
+        document.getElementById("webglContainer").appendChild(webGLRenderer.domElement);
+
+        var step = 0;
+
+        var controls = new function () {
+            console.log(circle.children[0].geometry);
+            this.radius = 4;
+
+            this.thetaStart = 0.3 * Math.PI * 2;
+            this.thetaLength = 0.3 * Math.PI * 2;
+            this.segments = 10;
+
+            this.redraw = function () {
+                scene.remove(circle);
+                circle = createMesh(new THREE.CircleGeometry(controls.radius, controls.segments, controls.thetaStart, controls.thetaLength));
+                scene.add(circle);
+            };
+        };
+
+        var gui = new dat.GUI();
+        gui.add(controls, 'radius', 0, 40).onChange(controls.redraw);
+        gui.add(controls, 'segments', 0, 40).onChange(controls.redraw);
+        gui.add(controls, 'thetaStart', 0, 2 * Math.PI).onChange(controls.redraw);
+        gui.add(controls, 'thetaLength', 0, 2 * Math.PI).onChange(controls.redraw);
+        render();
+
+        function createMesh(geom) {
+            var meshMaterial = new THREE.MeshNormalMaterial();
+            meshMaterial.side = THREE.DoubleSide;
+            var wireFrameMat = new THREE.MeshBasicMaterial();
+            wireFrameMat.wireframe = true;
+
+            var mesh = THREE.SceneUtils.createMultiMaterialObject(geom, [meshMaterial, wireFrameMat]);
+
+
+            return mesh;
+        }
+
+        function render() {
+            stats.update();
+
+            circle.rotation.y = step += 0.01;
+
+            requestAnimationFrame(render);
+            webGLRenderer.render(scene, camera);
+        }
+
+        function initStats() {
+
+            var stats = new Stats();
+            stats.setMode(0); // 0: fps, 1: ms
+
+            stats.domElement.style.position = 'absolute';
+            stats.domElement.style.left = '0px';
+            stats.domElement.style.top = '0px';
+
+            document.getElementById("statsContainer").appendChild(stats.domElement);
+
+            return stats;
+        }
+    }
+    window.onload = init;
+</script>
+</body>
+</html>

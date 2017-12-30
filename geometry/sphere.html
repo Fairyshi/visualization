@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>threejs demos</title>
+	<script type="text/javascript" src="../libs/three.js"></script>
+    <script type="text/javascript" src="../libs/stats.js"></script>
+    <script type="text/javascript" src="../libs/dat.gui.js"></script>
+	<style>
+	    body {
+	    	margin: 0;
+	    	padding: 0;
+	    	height: 1vh;
+	    }
+	</style>
+</head>
+<body>
+
+<div id="statsContainer">
+</div>
+<div id="webglContainer">
+</div>
+
+<script type="text/javascript">
+    function init() {
+
+        var stats = initStats();
+
+        var scene = new THREE.Scene();
+
+        var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        var webGLRenderer = new THREE.WebGLRenderer();
+        webGLRenderer.setClearColor(new THREE.Color(0xEEEEEE, 1.0));
+        webGLRenderer.setSize(window.innerWidth, window.innerHeight);
+        webGLRenderer.shadowMapEnabled = true;
+
+        var sphere = createMesh(new THREE.SphereGeometry(4, 10, 10));
+        scene.add(sphere);
+
+        camera.position.x = -20;
+        camera.position.y = 30;
+        camera.position.z = 40;
+        camera.lookAt(new THREE.Vector3(10, 0, 0));
+
+
+        document.getElementById("webglContainer").appendChild(webGLRenderer.domElement);
+
+        var step = 0;
+
+
+        var controls = new function () {
+            this.radius = sphere.children[0].geometry.parameters.radius;
+            this.widthSegments = sphere.children[0].geometry.parameters.widthSegments;
+            this.heightSegments = sphere.children[0].geometry.parameters.heightSegments;
+            this.phiStart = 0;
+            this.phiLength = Math.PI * 2;
+            this.thetaStart = 0;
+            this.thetaLength = Math.PI;
+
+
+            this.redraw = function () {
+                scene.remove(sphere);
+                sphere = createMesh(new THREE.SphereGeometry(controls.radius, controls.widthSegments, controls.heightSegments, controls.phiStart, controls.phiLength, controls.thetaStart, controls.thetaLength));
+                scene.add(sphere);
+            };
+        };
+
+        var gui = new dat.GUI();
+        gui.add(controls, 'radius', 0, 40).onChange(controls.redraw);
+        gui.add(controls, 'widthSegments', 0, 20).onChange(controls.redraw);
+        gui.add(controls, 'heightSegments', 0, 20).onChange(controls.redraw);
+        gui.add(controls, 'phiStart', 0, 2 * Math.PI).onChange(controls.redraw);
+        gui.add(controls, 'phiLength', 0, 2 * Math.PI).onChange(controls.redraw);
+        gui.add(controls, 'thetaStart', 0, 2 * Math.PI).onChange(controls.redraw);
+        gui.add(controls, 'thetaLength', 0, 2 * Math.PI).onChange(controls.redraw);
+
+
+        render();
+
+        function createMesh(geom) {
+            var meshMaterial = new THREE.MeshNormalMaterial();
+            meshMaterial.side = THREE.DoubleSide;
+            var wireFrameMat = new THREE.MeshBasicMaterial();
+            wireFrameMat.wireframe = true;
+
+            var mesh = THREE.SceneUtils.createMultiMaterialObject(geom, [meshMaterial, wireFrameMat]);
+
+            return mesh;
+        }
+
+        function render() {
+            stats.update();
+
+            sphere.rotation.y = step += 0.01;
+
+            requestAnimationFrame(render);
+            webGLRenderer.render(scene, camera);
+        }
+
+        function initStats() {
+
+            var stats = new Stats();
+            stats.setMode(0); // 0: fps, 1: ms
+
+            stats.domElement.style.position = 'absolute';
+            stats.domElement.style.left = '0px';
+            stats.domElement.style.top = '0px';
+
+            document.getElementById("statsContainer").appendChild(stats.domElement);
+
+            return stats;
+        }
+    }
+    window.onload = init;
+</script>
+</body>
+</html>

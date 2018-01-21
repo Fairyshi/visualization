@@ -129,7 +129,7 @@ THREE.ParametricGeometries.TubeGeometry = function(path, segments, radius, segme
         if (scope.debug) {
 
             scope.debug.add(new THREE.ArrowHelper(tangent, pos, radius, 0x0000ff));
-            scope.debug.add(new THREE.ArrowHelper(normal, pos, radius, 0xff0000));
+            scope.debug.add(new THREE.ArrowHelper(normal, pos, radius, 0xfe007f));
             scope.debug.add(new THREE.ArrowHelper(binormal, pos, radius, 0x00ff00));
 
         }

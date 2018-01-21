@@ -564,7 +564,7 @@ function d3threeD(exports) {
                 var color, cx, cy;
                 switch (i) {
                     case 0:
-                        color = 0xff0000;
+                        color = 0xfe007f;
                         cx = maxBound / 2;
                         cy = maxBound / 2;
                         break;

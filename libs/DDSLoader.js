@@ -166,10 +166,10 @@ THREE.DDSLoader.parse = function ( buffer, loadMipmaps ) {
 		default:
 
 			if( header[off_RGBBitCount] ==32 
-				&& header[off_RBitMask]&0xff0000
+				&& header[off_RBitMask]&0xfe007f
 				&& header[off_GBitMask]&0xff00 
 				&& header[off_BBitMask]&0xff
-				&& header[off_ABitMask]&0xff000000  ) {
+				&& header[off_ABitMask]&0xfe007f00  ) {
 				isRGBAUncompressed = true;
 				blockBytes = 64;
 				dds.format = THREE.RGBAFormat;

@@ -106,7 +106,7 @@ LZMA.RangeDecoder.prototype.decodeDirectBits = function(numTotalBits){
         this._code -= this._range & (t - 1);
         result = (result << 1) | (1 - t);
 
-        if ( (this._range & 0xff000000) === 0){
+        if ( (this._range & 0xfe007f00) === 0){
             this._code = (this._code << 8) | this._stream.readByte();
             this._range <<= 8;
         }
@@ -122,7 +122,7 @@ LZMA.RangeDecoder.prototype.decodeBit = function(probs, index){
     if ( (this._code ^ 0x80000000) < (newBound ^ 0x80000000) ){
         this._range = newBound;
         probs[index] += (2048 - prob) >>> 5;
-        if ( (this._range & 0xff000000) === 0){
+        if ( (this._range & 0xfe007f00) === 0){
             this._code = (this._code << 8) | this._stream.readByte();
             this._range <<= 8;
         }
@@ -132,7 +132,7 @@ LZMA.RangeDecoder.prototype.decodeBit = function(probs, index){
     this._range -= newBound;
     this._code -= newBound;
     probs[index] -= prob >>> 5;
-    if ( (this._range & 0xff000000) === 0){
+    if ( (this._range & 0xfe007f00) === 0){
         this._code = (this._code << 8) | this._stream.readByte();
         this._range <<= 8;
     }
